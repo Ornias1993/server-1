@@ -182,4 +182,19 @@ create or replace table t1 (x varchar(100) compressed, s date, e date,
                             period for p(s,e),
                             primary key(x, p without overlaps));
 
+--error ER_KEY_CANT_HAVE_WITHOUT_OVERLAPS
+create or replace table t (x int, s date, e date, period for apptime(s,e),
+                           b blob, unique(x, b, apptime without overlaps));
+
+create or replace table t (x int, s date, e date, b blob unique,
+                           period for apptime(s,e),
+                           unique(x, apptime without overlaps));
+
+insert into t values(1, '2020-03-01', '2020-03-05', 'test');
+--error ER_DUP_ENTRY
+insert into t values(1, '2020-03-05', '2020-03-10', 'test');
+insert into t values(1, '2020-03-05', '2020-03-10', 'test2');
+--error ER_DUP_ENTRY
+insert into t values(1, '2020-03-03', '2020-03-10', 'test3');
+
 create or replace database test;

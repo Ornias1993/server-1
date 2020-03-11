@@ -4238,8 +4238,15 @@ mysql_prepare_create_table(THD *thd, HA_CREATE_INFO *create_info,
     check_duplicate_key(thd, key, key_info, &alter_info->key_list);
 
     key_info->without_overlaps= key->without_overlaps;
-    if (key->without_overlaps)
+    if (key_info->without_overlaps)
+    {
+      if (key_info->algorithm == HA_KEY_ALG_LONG_HASH)
+      {
+        my_error(ER_KEY_CANT_HAVE_WITHOUT_OVERLAPS, MYF(0), key_info->name.str);
+        DBUG_RETURN(true);
+      }
       create_info->period_info.unique_keys++;
+    }
 
     key_info++;
   }
