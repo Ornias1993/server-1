@@ -4096,8 +4096,7 @@ public:
   using Field_str::store;
   double val_real() override;
   longlong val_int() override;
-  String *val_str(String *, String *) final;
-  virtual String *val_str(String*,String *, const uchar*) const;
+  String *val_str(String *, String *) override;
   my_decimal *val_decimal(my_decimal *) override;
   int cmp_max(const uchar *, const uchar *, uint max_length) const override;
   int cmp(const uchar *a,const uchar *b) const override
@@ -4160,8 +4159,7 @@ private:
   Compression_method *compression_method_ptr;
   int store(const char *to, size_t length, CHARSET_INFO *charset) override;
   using Field_str::store;
-  using Field_str::val_str;
-  String *val_str(String *, String *, const uchar *ptr_arg) const override;
+  String *val_str(String *, String *) override;
   double val_real() override;
   longlong val_int() override;
   uint size_of() const override { return sizeof *this; }

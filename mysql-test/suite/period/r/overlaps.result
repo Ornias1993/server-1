@@ -187,4 +187,11 @@ create or replace table t2 (x int, s date, e date,
 period for p (s, e),
 unique(x, p without overlaps, x, p without overlaps));
 ERROR 42000: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near ' x, p without overlaps))' at line 3
+create or replace table t1 (x varchar(100), s date, e date,
+period for p(s,e),
+primary key(x, p without overlaps));
+create or replace table t1 (x varchar(100) compressed, s date, e date,
+period for p(s,e),
+primary key(x, p without overlaps));
+ERROR HY000: Compressed column 'x' can't be used in key specification
 create or replace database test;

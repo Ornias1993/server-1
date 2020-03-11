@@ -180,4 +180,13 @@ create or replace table t2 (x int, s date, e date,
                             period for p (s, e),
                             unique(x, p without overlaps, x, p without overlaps));
 
+create or replace table t1 (x varchar(100), s date, e date,
+                            period for p(s,e),
+                            primary key(x, p without overlaps));
+
+--error ER_COMPRESSED_COLUMN_USED_AS_KEY
+create or replace table t1 (x varchar(100) compressed, s date, e date,
+                            period for p(s,e),
+                            primary key(x, p without overlaps));
+
 create or replace database test;

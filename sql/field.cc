@@ -7657,17 +7657,11 @@ longlong Field_varstring::val_int(void)
 }
 
 
-String *Field_varstring::val_str(String *val_buffer,
+String *Field_varstring::val_str(String *val_buffer __attribute__((unused)),
 				 String *val_ptr)
 {
-  return val_str(val_buffer, val_ptr, ptr);
-}
-String *Field_varstring::val_str(String *val_buffer __attribute__((unused)),
-				 String *val_ptr, const uchar *ptr_arg) const
-{
   DBUG_ASSERT(marked_for_read());
-  val_ptr->set((const char*) get_data(ptr_arg), get_length(ptr_arg),
-               field_charset());
+  val_ptr->set((const char*) get_data(), get_length(), field_charset());
   return val_ptr;
 }
 
@@ -7926,15 +7920,8 @@ uint Field_varstring::get_key_image(uchar *buff, uint length,
                                     const uchar *ptr_arg,
                                     imagetype type_arg) const
 {
-  String val;
-  uint local_char_length;
-  my_bitmap_map *old_map;
-
-  old_map= dbug_tmp_use_all_columns(table, table->read_set);
-  val_str(&val, &val, ptr_arg);
-  dbug_tmp_restore_column_map(table->read_set, old_map);
-
-  local_char_length= val.charpos(length / mbmaxlen());
+  String val((const char*)get_data(ptr_arg), get_length(ptr_arg), field_charset());
+  uint local_char_length= val.charpos(length / mbmaxlen());
   if (local_char_length < val.length())
     val.length(local_char_length);
   /* Key is always stored with 2 bytes */
@@ -8181,11 +8168,10 @@ int Field_varstring_compressed::store(const char *from, size_t length,
 }
 
 
-String *Field_varstring_compressed::val_str(String *val_buffer, String *val_ptr,
-                                            const uchar *ptr_arg) const
+String *Field_varstring_compressed::val_str(String *val_buffer, String *val_ptr)
 {
   DBUG_ASSERT(marked_for_read());
-  return uncompress(val_buffer, val_ptr, get_data(ptr_arg), get_length(ptr_arg));
+  return uncompress(val_buffer, val_ptr, get_data(), get_length());
 }
 
 
