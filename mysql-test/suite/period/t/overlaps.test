@@ -7,7 +7,8 @@ let $default_engine= `select @@default_storage_engine`;
 
 create or replace table t(id int, s date, e date,
                           period for p(s,e),
-                          primary key(id, p without overlaps));
+                          primary key(id, p without overlaps)
+) partition by key (id);
 
 --replace_result $default_engine DEFAULT_ENGINE
 show create table t;
@@ -153,21 +154,13 @@ create or replace table t1 like t;
 --replace_result $default_engine DEFAULT_ENGINE
 show create table t1;
 
---error ER_FEATURE_NOT_SUPPORTED_WITH_PARTITIONING
-create or replace table t1 (x int, s date, e date,
-                            period for p(s,e),
-                            primary key(x, p without overlaps)
-) partition by key (x);
-
 create or replace table t1 (x int, s date, e date,
                             period for p(s,e),
                             primary key(x, p without overlaps));
---error ER_FEATURE_NOT_SUPPORTED_WITH_PARTITIONING
 alter table t1 partition by key (x);
 
 create or replace table t1 (x int, s date, e date, period for p (s, e))
                            partition by hash (x);
---error ER_FEATURE_NOT_SUPPORTED_WITH_PARTITIONING
 alter table t1 add primary key (x, p without overlaps);
 
 --error ER_PARSE_ERROR

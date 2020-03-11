@@ -1,6 +1,7 @@
 create or replace table t(id int, s date, e date,
 period for p(s,e),
-primary key(id, p without overlaps));
+primary key(id, p without overlaps)
+) partition by key (id);
 show create table t;
 Table	Create Table
 t	CREATE TABLE `t` (
@@ -10,6 +11,7 @@ t	CREATE TABLE `t` (
   PERIOD FOR `p` (`s`, `e`),
   PRIMARY KEY (`id`,`p` WITHOUT OVERLAPS)
 ) ENGINE=DEFAULT_ENGINE DEFAULT CHARSET=latin1
+ PARTITION BY KEY (`id`)
 insert into t values (1, '2003-01-01', '2003-03-01'),
 (1, '2003-05-01', '2003-07-01');
 insert into t values (1, '2003-02-01', '2003-04-01');
@@ -167,18 +169,11 @@ t1	CREATE TABLE `t1` (
 ) ENGINE=DEFAULT_ENGINE DEFAULT CHARSET=latin1 WITH SYSTEM VERSIONING
 create or replace table t1 (x int, s date, e date,
 period for p(s,e),
-primary key(x, p without overlaps)
-) partition by key (x);
-ERROR HY000: Partitioned tables do not support WITHOUT OVERLAPS
-create or replace table t1 (x int, s date, e date,
-period for p(s,e),
 primary key(x, p without overlaps));
 alter table t1 partition by key (x);
-ERROR HY000: Partitioned tables do not support WITHOUT OVERLAPS
 create or replace table t1 (x int, s date, e date, period for p (s, e))
 partition by hash (x);
 alter table t1 add primary key (x, p without overlaps);
-ERROR HY000: Partitioned tables do not support WITHOUT OVERLAPS
 create or replace table t2 (x int, s date, e date,
 period for p (s, e),
 key(x, p without overlaps));

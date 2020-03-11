@@ -4584,14 +4584,7 @@ static bool append_system_key_parts(THD *thd, HA_CREATE_INFO *create_info,
         my_error(ER_PERIOD_NOT_FOUND, MYF(0), key->period.str);
         return true;
       }
-      if (thd->work_part_info)
-      {
-        // Unfortunately partitions do not support searching upper/lower bounds
-        // (i.e. ha_index_read_map with KEY_OR_PREV, KEY_OR_NEXT)
-        my_error(ER_FEATURE_NOT_SUPPORTED_WITH_PARTITIONING, MYF(0),
-                 "WITHOUT OVERLAPS");
-        return true;
-      }
+
       const auto &period_start= create_info->period_info.period.start;
       const auto &period_end= create_info->period_info.period.end;
       List_iterator<Key_part_spec> part_it(key->columns);
