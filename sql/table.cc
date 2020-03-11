@@ -8626,7 +8626,7 @@ void TABLE::evaluate_update_default_function()
 }
 
 /**
-  Compare two records by a specific keys (that has WITHOUT OVERLAPS clause)
+  Compare two records by a specific key (that has WITHOUT OVERLAPS clause)
   @return -1,    lhs precedes rhs
            0,    lhs overlaps rhs
            1,    lhs succeeds rhs
@@ -8636,12 +8636,10 @@ int TABLE::check_period_overlaps(const KEY &key,
 {
   DBUG_ASSERT(key.without_overlaps);
   uint base_part_nr= key.user_defined_key_parts - 2;
-  int cmp_res= 0;
-  for (uint part_nr= 0; !cmp_res && part_nr < base_part_nr; part_nr++)
+  for (uint part_nr= 0; part_nr < base_part_nr; part_nr++)
   {
     Field *f= key.key_part[part_nr].field;
-    cmp_res= f->cmp(f->ptr_in_record(lhs), f->ptr_in_record(rhs));
-    if (cmp_res)
+    if (int cmp_res= f->cmp(f->ptr_in_record(lhs), f->ptr_in_record(rhs)))
       return cmp_res;
   }
 
