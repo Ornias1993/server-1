@@ -178,6 +178,6 @@ create or replace table t2 (x int, s date, e date,
 --error ER_PARSE_ERROR
 create or replace table t2 (x int, s date, e date,
                             period for p (s, e),
-                            index(x, p without overlaps, x, p without overlaps));
+                            unique(x, p without overlaps, x, p without overlaps));
 
 create or replace database test;
