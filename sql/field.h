@@ -4009,9 +4009,9 @@ public:
 
 class Field_varstring :public Field_longstr {
 public:
-  uchar *get_data() const
+  const uchar *get_data() const
   {
-    return ptr + length_bytes;
+    return get_data(ptr);
   }
   const uchar *get_data(const uchar *ptr_arg) const
   {
