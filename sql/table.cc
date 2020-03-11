@@ -8627,11 +8627,11 @@ void TABLE::evaluate_update_default_function()
 
 /**
   Compare two records by a specific key (that has WITHOUT OVERLAPS clause)
-  @return -1,    lhs precedes rhs
-           0,    lhs overlaps rhs
-           1,    lhs succeeds rhs
+
+  @return  true,     key values are equal and periods overlap
+           false,    either key values differ or periods don't overlap
  */
-int TABLE::check_period_overlaps(const KEY &key,
+bool TABLE::check_period_overlaps(const KEY &key,
                                  const uchar *lhs, const uchar *rhs)
 {
   DBUG_ASSERT(key.without_overlaps);
@@ -8639,8 +8639,11 @@ int TABLE::check_period_overlaps(const KEY &key,
   for (uint part_nr= 0; part_nr < base_part_nr; part_nr++)
   {
     Field *f= key.key_part[part_nr].field;
-    if (int cmp_res= f->cmp(f->ptr_in_record(lhs), f->ptr_in_record(rhs)))
-      return cmp_res;
+    if (key.key_part[part_nr].null_bit)
+      if (f->is_null_in_record(lhs) || f->is_null_in_record(rhs))
+        return false;
+    if (f->cmp(f->ptr_in_record(lhs), f->ptr_in_record(rhs)) != 0)
+      return false;
   }
 
   uint period_start= key.user_defined_key_parts - 1;
@@ -8649,10 +8652,10 @@ int TABLE::check_period_overlaps(const KEY &key,
   const Field *fe= key.key_part[period_end].field;
 
   if (fs->cmp(fe->ptr_in_record(lhs), fs->ptr_in_record(rhs)) <= 0)
-    return -1;
+    return false;
   if (fs->cmp(fs->ptr_in_record(lhs), fe->ptr_in_record(rhs)) >= 0)
-    return 1;
-  return 0;
+    return false;
+  return true;
 }
 
 void TABLE::vers_update_fields()
