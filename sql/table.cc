@@ -8639,7 +8639,7 @@ int TABLE::check_period_overlaps(const KEY &lhs_key, const KEY &rhs_key,
   for (uint part_nr= 0; !cmp_res && part_nr < base_part_nr; part_nr++)
   {
     Field *f= lhs_key.key_part[part_nr].field;
-    cmp_res= f->cmp(f->ptr_in_record(lhs),
+    cmp_res= f->cmp(lhs_key.key_part[part_nr].field->ptr_in_record(lhs),
                     rhs_key.key_part[part_nr].field->ptr_in_record(rhs));
     if (cmp_res)
       return cmp_res;
