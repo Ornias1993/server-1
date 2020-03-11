@@ -8626,37 +8626,33 @@ void TABLE::evaluate_update_default_function()
 }
 
 /**
-  Compare two keys with periods
+  Compare two records by a specific keys (that has WITHOUT OVERLAPS clause)
   @return -1,    lhs precedes rhs
            0,    lhs overlaps rhs
            1,    lhs succeeds rhs
  */
-int TABLE::check_period_overlaps(const KEY &lhs_key, const KEY &rhs_key,
+int TABLE::check_period_overlaps(const KEY &key,
                                  const uchar *lhs, const uchar *rhs)
 {
-  uint base_part_nr= lhs_key.user_defined_key_parts - 2;
+  DBUG_ASSERT(key.without_overlaps);
+  uint base_part_nr= key.user_defined_key_parts - 2;
   int cmp_res= 0;
   for (uint part_nr= 0; !cmp_res && part_nr < base_part_nr; part_nr++)
   {
-    Field *f= lhs_key.key_part[part_nr].field;
-    cmp_res= f->cmp(lhs_key.key_part[part_nr].field->ptr_in_record(lhs),
-                    rhs_key.key_part[part_nr].field->ptr_in_record(rhs));
+    Field *f= key.key_part[part_nr].field;
+    cmp_res= f->cmp(f->ptr_in_record(lhs), f->ptr_in_record(rhs));
     if (cmp_res)
       return cmp_res;
   }
 
-  uint period_start= lhs_key.user_defined_key_parts - 1;
-  uint period_end= lhs_key.user_defined_key_parts - 2;
+  uint period_start= key.user_defined_key_parts - 1;
+  uint period_end= key.user_defined_key_parts - 2;
+  const Field *fs= key.key_part[period_start].field;
+  const Field *fe= key.key_part[period_end].field;
 
-  const Field *f= lhs_key.key_part[period_start].field;
-  const uchar *ls= lhs_key.key_part[period_start].field->ptr_in_record(lhs);
-  const uchar *rs= rhs_key.key_part[period_start].field->ptr_in_record(rhs);
-  const uchar *le= lhs_key.key_part[period_end  ].field->ptr_in_record(lhs);
-  const uchar *re= rhs_key.key_part[period_end  ].field->ptr_in_record(rhs);
-
-  if (f->cmp(le, rs) <= 0)
+  if (fs->cmp(fe->ptr_in_record(lhs), fs->ptr_in_record(rhs)) <= 0)
     return -1;
-  if (f->cmp(ls, re) >= 0)
+  if (fs->cmp(fs->ptr_in_record(lhs), fe->ptr_in_record(rhs)) >= 0)
     return 1;
   return 0;
 }
