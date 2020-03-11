@@ -6516,6 +6516,7 @@ int handler::ha_external_lock(THD *thd, int lock_type)
   {
     lookup_handler->ha_external_lock(table->in_use, F_UNLCK);
     lookup_handler->close();
+    delete lookup_handler;
     lookup_handler= NULL;
   }
 
