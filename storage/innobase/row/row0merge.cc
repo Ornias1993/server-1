@@ -3287,7 +3287,7 @@ row_merge_sort(
 	num_runs = file->offset;
 
 	if (stage != NULL) {
-		stage->begin_phase_sort(log2(num_runs));
+		stage->begin_phase_sort(log2(double(num_runs)));
 	}
 
 	/* If num_runs are less than 1, nothing to merge */

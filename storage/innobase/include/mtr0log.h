@@ -42,7 +42,7 @@ constexpr uint32_t MLOG_DECODE_ERROR= ~0U;
 inline uint8_t mlog_decode_varint_length(byte first)
 {
   uint8_t len= 1;
-  for (; first & 0x80; len++, first<<= 1);
+  for (; first & 0x80; len++, first= static_cast<uint8_t>(first << 1));
   return len;
 }
 

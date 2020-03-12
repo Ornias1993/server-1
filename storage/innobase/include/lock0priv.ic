@@ -98,7 +98,7 @@ lock_rec_set_nth_bit(
 	byte_index = i / 8;
 	bit_index = i % 8;
 
-	((byte*) &lock[1])[byte_index] |= 1 << bit_index;
+	((byte*) &lock[1])[byte_index] |= static_cast<byte>(1 << bit_index);
 
 	++lock->trx->lock.n_rec_locks;
 }

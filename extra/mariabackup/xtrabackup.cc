@@ -242,11 +242,6 @@ static char*	innobase_ignored_opt;
 char*	innobase_data_home_dir;
 char*	innobase_data_file_path;
 
-my_bool innobase_use_doublewrite;
-my_bool	innobase_file_per_table;
-my_bool innobase_rollback_on_timeout;
-my_bool innobase_create_status_file;
-
 /* The following counter is used to convey information to InnoDB
 about server activity: in selects it is not sensible to call
 srv_active_wake_master_thread after each fetch or search, we only do
@@ -1236,8 +1231,8 @@ struct my_option xb_server_options[] =
    &innobase_data_home_dir, 0, GET_STR, REQUIRED_ARG, 0, 0, 0, 0, 0, 0},
   {"innodb_doublewrite", OPT_INNODB_DOUBLEWRITE,
    "Enable InnoDB doublewrite buffer during --prepare.",
-   (G_PTR*) &innobase_use_doublewrite,
-   (G_PTR*) &innobase_use_doublewrite, 0, GET_BOOL, NO_ARG, 0, 0, 0, 0, 0, 0},
+   (G_PTR*) &srv_use_doublewrite_buf,
+   (G_PTR*) &srv_use_doublewrite_buf, 0, GET_BOOL, NO_ARG, 0, 0, 0, 0, 0, 0},
   {"innodb_io_capacity", OPT_INNODB_IO_CAPACITY,
    "Number of IOPs the server can do. Tunes the background IO rate",
    (G_PTR*) &srv_io_capacity, (G_PTR*) &srv_io_capacity,
@@ -1256,8 +1251,8 @@ struct my_option xb_server_options[] =
    1, 0},
   {"innodb_file_per_table", OPT_INNODB_FILE_PER_TABLE,
    "Stores each InnoDB table to an .ibd file in the database dir.",
-   (G_PTR*) &innobase_file_per_table,
-   (G_PTR*) &innobase_file_per_table, 0, GET_BOOL, NO_ARG,
+   (G_PTR*) &srv_file_per_table,
+   (G_PTR*) &srv_file_per_table, 0, GET_BOOL, NO_ARG,
    FALSE, 0, 0, 0, 0, 0},
 
   {"innodb_flush_method", OPT_INNODB_FLUSH_METHOD,
@@ -1887,14 +1882,7 @@ static bool innodb_init_param()
 	srv_n_read_io_threads = (ulint) innobase_read_io_threads;
 	srv_n_write_io_threads = (ulint) innobase_write_io_threads;
 
-	srv_use_doublewrite_buf = (ibool) innobase_use_doublewrite;
-
-	row_rollback_on_timeout = (ibool) innobase_rollback_on_timeout;
-
-	srv_file_per_table = (my_bool) innobase_file_per_table;
-
 	srv_max_n_open_files = ULINT_UNDEFINED - 5;
-	srv_innodb_status = (ibool) innobase_create_status_file;
 
 	srv_print_verbose_log = verbose ? 2 : 1;
 
@@ -3766,24 +3754,22 @@ xb_filters_free()
 
 /***********************************************************************
 Set the open files limit. Based on set_max_open_files().
-
+@param max_file_limit  requested open files limit
 @return the resulting open files limit. May be less or more than the requested
 value.  */
-static uint
-xb_set_max_open_files(
-/*==================*/
-	uint max_file_limit)	/*!<in: open files limit */
+static ulong
+xb_set_max_open_files(ulong max_file_limit)
 {
 #if defined(RLIMIT_NOFILE)
 	struct rlimit rlimit;
-	uint old_cur;
+	ulong old_cur;
 
 	if (getrlimit(RLIMIT_NOFILE, &rlimit)) {
 
 		goto end;
 	}
 
-	old_cur = (uint) rlimit.rlim_cur;
+	old_cur = rlimit.rlim_cur;
 
 	if (rlimit.rlim_cur == RLIM_INFINITY) {
 
@@ -3810,7 +3796,7 @@ xb_set_max_open_files(
 		if (rlimit.rlim_cur) {
 
 			/* If call didn't fail */
-			max_file_limit = (uint) rlimit.rlim_cur;
+			max_file_limit = rlimit.rlim_cur;
 		}
 	}
 
@@ -3950,8 +3936,8 @@ static bool xtrabackup_backup_func()
 	}
 	msg("cd to %s", mysql_real_data_home);
 	encryption_plugin_backup_init(mysql_connection);
-	msg("open files limit requested %u, set to %u",
-	    (uint) xb_open_files_limit,
+	msg("open files limit requested %lu, set to %lu",
+	    xb_open_files_limit,
 	    xb_set_max_open_files(xb_open_files_limit));
 
 	mysql_data_home= mysql_data_home_buff;
@@ -4515,10 +4501,11 @@ xb_space_create_file(
 		fprintf(stderr, "zip_size = " ULINTPF "\n", zip_size);
 
 #ifdef UNIV_DEBUG
-		page_zip.m_start =
+		page_zip.m_start = 0;
 #endif /* UNIV_DEBUG */
-			page_zip.m_end = page_zip.m_nonempty =
-			page_zip.n_blobs = 0;
+		page_zip.m_end = 0;
+		page_zip.m_nonempty = 0;
+		page_zip.n_blobs = 0;
 
 		buf_flush_init_for_writing(NULL, page, &page_zip, false);
 
@@ -6197,10 +6184,10 @@ static int main_low(char** argv)
 		    incremental_lsn);
 	}
 
-	if (xtrabackup_export && innobase_file_per_table == FALSE) {
+	if (xtrabackup_export && !srv_file_per_table) {
 		msg("mariabackup: auto-enabling --innodb-file-per-table due to "
 		    "the --export option");
-		innobase_file_per_table = TRUE;
+		srv_file_per_table = TRUE;
 	}
 
 	/* cannot execute both for now */
