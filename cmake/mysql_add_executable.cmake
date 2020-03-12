@@ -103,7 +103,7 @@ FUNCTION (MYSQL_ADD_EXECUTABLE)
     ELSE()
       SET(link ${link}.exe)
       ADD_CUSTOM_COMMAND(TARGET ${target} POST_BUILD
-        COMMAND cmake -E rm -f ${link}
+        COMMAND cmake -E remove -f ${link}
         COMMAND mklink /H ${link} $<TARGET_FILE_NAME:${target}>
         COMMENT "Creating ${link} link"
         WORKING_DIRECTORY $<TARGET_FILE_DIR:${target}>)
